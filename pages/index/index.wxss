@@ -1,0 +1,153 @@
+.container {
+  padding: 30rpx;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 30rpx;
+}
+
+.section {
+  width: 90%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.welcome-section {
+  color: #fff;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.username {
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.logout-link {
+  font-size: 24rpx;
+  color: #eee;
+  margin-left: 10rpx;
+}
+
+.form-group {
+  margin-bottom: 30rpx;
+}
+
+label {
+  display: block;
+  margin-bottom: 15rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.input {
+  width: 100%;
+  height: 80rpx;
+  border: 1px solid #ddd;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.textarea {
+  width: 100%;
+  height: 240rpx;
+  border: 1px solid #ddd;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.btn {
+  width: 100% !important;
+  border-radius: 12rpx;
+  font-weight: normal;
+}
+
+.btn-primary {
+  background: #6a11cb;
+  color: white;
+}
+
+.history-section {
+  margin-top: 20rpx;
+  padding: 0 20rpx;
+}
+
+.history-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+
+.dream-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.dream-date {
+  font-size: 24rpx;
+  color: #888;
+  margin-bottom: 15rpx;
+}
+
+.dream-content {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 20rpx;
+  line-height: 1.6;
+}
+
+.ai-badge {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  background: #e1f5fe;
+  color: #0288d1;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  margin-bottom: 10rpx;
+  margin-top: 10rpx;
+}
+
+.ai-content {
+  font-size: 26rpx;
+  font-style: italic;
+  color: #555;
+  background: #f9f9f9;
+  padding: 15rpx;
+  border-left: 6rpx solid #2575fc;
+  margin-bottom: 10rpx;
+}
+
+.empty-msg {
+  text-align: center;
+  color: #eee;
+  padding: 40rpx 0;
+}
