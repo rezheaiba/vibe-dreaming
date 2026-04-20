@@ -1,63 +1,75 @@
 <view class="container">
-  <view class="header">
-    <text class="title">巡游梦境</text>
-  </view>
-
-  <!-- Login Section -->
-  <view wx:if="{{!currentUser}}" class="card section">
-    <view class="form-group">
-      <label>请输入您的昵称：</label>
-      <input 
-        class="input" 
-        placeholder="例如：织梦人" 
-        value="{{username}}"
-        bindinput="handleInput"
-        data-field="username"
-      />
-    </view>
-    <button class="btn btn-primary" bindtap="login">开启梦境之旅</button>
-  </view>
-
-  <!-- App Content -->
-  <view wx:else class="full-width">
-    <view class="welcome-section">
-      <text>欢迎回来，</text>
-      <text class="username">{{currentUser.username}}</text>
-      <text class="logout-link" bindtap="logout"> [退出]</text>
+  <view wx:if="{{!currentUser}}">
+    <view class="header">
+      <text class="title">巡游梦境</text>
+      <text class="subtitle">探索潜意识的奇妙世界</text>
     </view>
 
     <view class="card section">
       <view class="form-group">
-        <label>记下您的梦境：</label>
+        <label>请输入您的昵称：</label>
+        <input 
+          class="input" 
+          placeholder="例如：织梦人" 
+          value="{{username}}"
+          bindinput="handleInput"
+          data-field="username"
+        />
+      </view>
+      <button class="btn btn-primary" bindtap="login">开启梦境之旅</button>
+    </view>
+  </view>
+
+  <!-- App Content -->
+  <view wx:else>
+    <view class="add-dream-card">
+      <view class="form-group">
         <textarea 
           class="textarea" 
-          placeholder="昨晚我梦见..." 
+          placeholder="记录昨晚的梦境...✨" 
           value="{{dreamInput}}"
           bindinput="handleInput"
           data-field="dreamInput"
           maxlength="-1"
+          auto-height
         />
       </view>
-      <button class="btn btn-primary" bindtap="submitDream">提交到梦库</button>
+      <button class="btn btn-primary" bindtap="submitDream">✨ 记录梦境</button>
     </view>
 
-    <view class="history-section">
-      <view class="history-title">历史梦境记录</view>
-      
-      <view wx:if="{{dreamHistory.length === 0}}" class="empty-msg">
-        尚无记录，快去记录第一个梦吧！
+    <!-- 搜索框 -->
+    <view class="search-box">
+      <input 
+        class="search-input" 
+        placeholder="搜索梦境关键词..." 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+      />
+      <button class="search-btn" bindtap="onSearch">🔍 搜索</button>
+    </view>
+
+    <!-- 梦境列表（按时间倒序） -->
+    <view class="dream-list">
+      <view wx:if="{{filteredDreams.length === 0}}" class="empty-msg">
+        {{searchKeyword ? '未找到相关梦境' : '尚无记录，快去记录第一个梦吧！'}}
       </view>
 
-      <view wx:for="{{dreamHistory}}" wx:key="id" class="dream-card">
-        <view class="dream-date">{{item.formattedDate}}</view>
-        <view class="dream-content">{{item.raw_content}}</view>
-        
-        <view class="ai-section">
-          <view class="ai-badge">✨ AI 精炼</view>
-          <view class="ai-content">{{item.refined_content || '处理中...'}}</view>
-          
-          <view class="ai-badge">🌌 AI 扩充</view>
-          <view class="ai-content">{{item.expanded_content || '处理中...'}}</view>
+      <view 
+        wx:for="{{filteredDreams}}" 
+        wx:key="id" 
+        class="dream-item-card"
+        bindtap="goToDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="dream-header">
+          <view class="dream-date">{{item.formattedDate}}</view>
+          <view class="dream-badge" wx:if="{{item.is_public === 1}}">🌍 公开</view>
+        </view>
+        <view class="dream-preview">{{item.shortContent}}</view>
+        <view class="ai-tags">
+          <text wx:if="{{item.refined_content}}" class="ai-tag">✨ 精炼</text>
+          <text wx:if="{{item.expanded_content}}" class="ai-tag">🌌 扩充</text>
+          <text wx:if="{{item.analysis_content}}" class="ai-tag">🔮 解梦</text>
         </view>
       </view>
     </view>

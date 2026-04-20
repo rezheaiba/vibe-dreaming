@@ -1,0 +1,126 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="loading-state">
+    <text>正在读取梦境...</text>
+  </view>
+
+  <view wx:elif="{{dream}}" class="detail-page">
+    <!-- 内容卡片 -->
+    <view class="content-card">
+      <view class="card-header">
+        <image class="avatar" src="/images/dream.png" />
+        <view class="user-meta">
+          <text class="username">{{dream.username || '织梦人'}}</text>
+          <text class="date">{{dream.formattedDate}}</text>
+        </view>
+        <view wx:if="{{isOwner}}" class="status-tag {{dream.is_public ? 'pub' : 'priv'}}">
+          {{dream.is_public ? '🌍 公开' : '🔒 私密'}}
+        </view>
+      </view>
+
+      <view class="dream-body">
+        <block wx:if="{{!isEdit}}">
+          <text class="main-text" user-select>{{dream.raw_content}}</text>
+        </block>
+        <block wx:else>
+          <textarea class="edit-field" value="{{editContent}}" bindinput="onEditInput" auto-height maxlength="-1" focus />
+        </block>
+      </view>
+
+      <!-- AI 板块 (补全扩充功能) -->
+      <view class="ai-container" wx:if="{{!isEdit}}">
+        <view class="ai-item refine" wx:if="{{dream.refined_content}}">
+          <view class="ai-label">✨ AI 精炼</view>
+          <view class="ai-text">{{dream.refined_content}}</view>
+        </view>
+        <view class="ai-item expand" wx:if="{{dream.expanded_content}}">
+          <view class="ai-label">🌌 AI 扩充</view>
+          <view class="ai-text">{{dream.expanded_content}}</view>
+        </view>
+        <view class="ai-item analyze" wx:if="{{dream.analysis_content}}">
+          <view class="ai-label">🔮 AI 解梦</view>
+          <view class="ai-text">{{dream.analysis_content}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评论区 -->
+    <view class="comments-card" wx:if="{{dream.is_public || isOwner}}">
+      <view class="section-title">评论 ({{dream.comment_count}})</view>
+      
+      <view wx:for="{{commentTree}}" wx:key="id" class="comment-floor">
+        <view class="comment-main">
+          <view class="c-header">
+            <text class="c-user">{{item.username}}</text>
+            <view class="c-right">
+              <view class="c-like {{item.is_liked ? 'active' : ''}}" catchtap="likeComment" data-id="{{item.id}}">
+                <text>{{item.is_liked ? '❤️' : '🤍'}}</text>
+                <text class="l-count">{{item.like_count || 0}}</text>
+              </view>
+              <view wx:if="{{currentUser.id === item.user_id}}" class="c-delete" catchtap="deleteComment" data-id="{{item.id}}">删除</view>
+            </view>
+          </view>
+          <text class="c-content" bindtap="replyComment" data-id="{{item.id}}" data-root="{{item.id}}" data-user="{{item.username}}">{{item.content}}</text>
+        </view>
+
+        <view class="reply-area" wx:if="{{item.replies.length > 0}}">
+          <view wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id" class="reply-item">
+            <view class="c-header">
+              <text class="c-user">{{reply.username}}</text>
+              <text wx:if="{{reply.reply_to}}" class="c-reply-to">回复 @{{reply.reply_to}}</text>
+              <view class="c-right">
+                <view class="c-like {{reply.is_liked ? 'active' : ''}}" catchtap="likeComment" data-id="{{reply.id}}">
+                  <text>{{reply.is_liked ? '❤️' : '🤍'}}</text>
+                  <text class="l-count">{{reply.like_count || 0}}</text>
+                </view>
+                <view wx:if="{{currentUser.id === reply.user_id && !reply.is_deleted}}" class="c-delete" catchtap="deleteComment" data-id="{{reply.id}}">删除</view>
+              </view>
+            </view>
+            <text class="c-content {{reply.is_deleted ? 'deleted' : ''}}" bindtap="{{reply.is_deleted ? '' : 'replyComment'}}" data-id="{{reply.id}}" data-root="{{item.id}}" data-user="{{reply.username}}">{{reply.content}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{commentTree.length === 0}}" class="c-empty">快来发布第一条评论吧 ✨</view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar" wx:if="{{dream}}">
+    <view class="edit-actions" wx:if="{{isEdit}}">
+      <view class="pill-btn cancel" bindtap="cancelEdit">取消</view>
+      <view class="pill-btn save" bindtap="saveEdit">保存修改</view>
+    </view>
+
+    <view class="view-actions" wx:else>
+      <view class="social-group">
+        <view class="icon-box {{dream.is_liked ? 'active' : ''}}" bindtap="toggleLike">
+          <text class="icon">{{dream.is_liked ? '❤️' : '🤍'}}</text>
+          <text class="count">{{dream.like_count || 0}}</text>
+        </view>
+        <view class="icon-box {{dream.is_faved ? 'active' : ''}}" bindtap="toggleFav">
+          <text class="icon">{{dream.is_faved ? '⭐' : '☆'}}</text>
+          <text class="count">{{dream.fav_count || 0}}</text>
+        </view>
+      </view>
+
+      <view class="owner-group" wx:if="{{isOwner}}">
+        <view class="circle-btn" bindtap="startEdit">✏️</view>
+        <view class="circle-btn danger" bindtap="deleteDream">🗑️</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 独立评论输入区 -->
+  <view class="comment-input-area" wx:if="{{(dream.is_public || isOwner) && !isEdit}}">
+    <input 
+      class="ci-field" 
+      placeholder="{{replyToUser ? '回复 @' + replyToUser : '发表评论...'}}" 
+      value="{{commentInput}}" 
+      bindinput="onCommentInput" 
+      confirm-type="send" 
+      bindconfirm="submitComment"
+      focus="{{inputFocus}}"
+    />
+    <view class="ci-send" bindtap="submitComment">发送</view>
+  </view>
+</view>

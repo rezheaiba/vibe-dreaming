@@ -19,9 +19,9 @@
     "uploadWithSourceMap": true,
     "compileHotReload": false,
     "lazyloadPlaceholderEnable": false,
-    "useMultiFrameRuntime": true,
-    "useApiHook": true,
-    "useApiHostProcess": true,
+    "useMultiFrameRuntime": false,
+    "useApiHook": false,
+    "useApiHostProcess": false,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
@@ -44,14 +44,27 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "3.3.4",
-  "appid": "wx20c4c4720dfe451a",
+  "libVersion": "3.15.1",
+  "appid": "touristappid",
   "projectname": "vibe-dreaming",
-  "condition": {},
+  "miniprogramRoot": "./",
   "srcMiniprogramRoot": "./",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "server"
+      },
+      {
+        "type": "file",
+        "value": "dreams.db"
+      },
+      {
+        "type": "file",
+        "value": "开发手册.md"
+      }
+    ],
     "include": []
   },
   "editorSetting": {}

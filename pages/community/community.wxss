@@ -1,0 +1,156 @@
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+}
+
+.header-box {
+  background: white;
+  padding: 20rpx 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 40rpx;
+  padding: 5rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 70rpx;
+  font-size: 28rpx;
+}
+
+.search-btn {
+  width: 120rpx !important;
+  height: 60rpx;
+  padding: 0;
+  background: #6a11cb;
+  color: white;
+  font-size: 26rpx;
+  border-radius: 30rpx;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 解决文字居中问题 */
+}
+
+.sort-tabs {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 10rpx;
+}
+
+.tab {
+  font-size: 28rpx;
+  color: #666;
+  padding: 10rpx 20rpx;
+  position: relative;
+}
+
+.tab.active {
+  color: #6a11cb;
+  font-weight: bold;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 4rpx;
+  background: #6a11cb;
+  border-radius: 2rpx;
+}
+
+.post-list {
+  flex: 1;
+  overflow: hidden;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.post-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.03);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.post-user {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.post-date {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.post-content {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #444;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1rpx solid #f5f5f5;
+  padding-top: 20rpx;
+}
+
+.post-stat {
+  display: flex;
+  gap: 20rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.ai-badges {
+  display: flex;
+  gap: 10rpx;
+}
+
+.badge {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  background: #f0f4ff;
+  color: #6a11cb;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.no-more {
+  text-align: center;
+  padding: 30rpx;
+  color: #ccc;
+  font-size: 24rpx;
+}

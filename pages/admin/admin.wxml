@@ -1,0 +1,61 @@
+<view class="container" wx:if="{{currentUser}}">
+  <!-- 用户名片 -->
+  <view class="user-card">
+    <view class="user-main">
+      <image class="avatar" src="/images/dream-active.png" />
+      <view class="user-info">
+        <view class="name-row">
+          <text class="username">{{currentUser.username}}</text>
+          <text class="level-tag">Lv.{{currentUser.level || 1}} {{currentUser.is_admin ? '管理员' : '织梦人'}}</text>
+        </view>
+        <view class="signature-box" bindtap="editSignature">
+          <text class="signature">{{currentUser.signature || '点击设置个性签名...'}}</text>
+          <text class="edit-icon">✏️</text>
+        </view>
+      </view>
+      <view class="logout-icon" bindtap="logout">退出</view>
+    </view>
+  </view>
+
+  <!-- 功能切换 -->
+  <view class="tab-container">
+    <view class="tab-list">
+      <view class="tab-item {{activeTab === 'mine' ? 'active' : ''}}" bindtap="switchTab" data-tab="mine">我的梦境</view>
+      <view class="tab-item {{activeTab === 'favs' ? 'active' : ''}}" bindtap="switchTab" data-tab="favs">收藏</view>
+      <view class="tab-item {{activeTab === 'likes' ? 'active' : ''}}" bindtap="switchTab" data-tab="likes">点赞</view>
+      <view class="tab-item {{activeTab === 'admin' ? 'active' : ''}}" bindtap="switchTab" data-tab="admin" wx:if="{{currentUser.is_admin}}">管理</view>
+    </view>
+  </view>
+
+  <!-- 内容列表 -->
+  <scroll-view scroll-y class="list-scroll">
+    <view class="list-container">
+      <view wx:for="{{displayList}}" wx:key="id" class="dream-row" bindtap="goToDetail" data-id="{{item.id}}">
+        <view class="row-main">
+          <view class="row-header">
+            <text class="row-date">{{item.formattedDate}}</text>
+          </view>
+          <text class="row-text">{{item.raw_content}}</text>
+        </view>
+        
+        <view class="row-ops" catchtap="stopBubble">
+          <block wx:if="{{activeTab === 'mine'}}">
+            <view class="op-btn" catchtap="onTogglePublic" data-id="{{item.id}}" data-current="{{item.is_public}}">
+              {{item.is_public ? '🌍' : '🔒'}}
+            </view>
+            <view class="op-btn danger" catchtap="onDeleteDream" data-id="{{item.id}}">🗑️</view>
+          </block>
+          <block wx:if="{{activeTab === 'admin' && currentUser.is_admin}}">
+             <view class="op-btn danger" catchtap="onDeleteDream" data-id="{{item.id}}">🗑️</view>
+          </block>
+        </view>
+      </view>
+      
+      <view wx:if="{{displayList.length === 0 && !loading}}" class="empty-msg">这里空空如也~</view>
+    </view>
+  </scroll-view>
+</view>
+
+<view class="login-placeholder" wx:else>
+  <!-- 未登录时的占位图或空状态，由 app.checkLogin() 处理跳转 -->
+</view>

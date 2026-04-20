@@ -1,0 +1,63 @@
+<view class="container">
+  <!-- 统计卡片 -->
+  <view class="stats-card">
+    <view class="stat-item">
+      <text class="stat-number">{{streak}}</text>
+      <text class="stat-label">连续打卡</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-number">{{totalCheckins}}</text>
+      <text class="stat-label">累计打卡</text>
+    </view>
+    <view class="stat-item" bindtap="goToChallenge">
+      <text class="stat-label">挑战</text>
+      <text class="stat-more">ℹ️</text>
+    </view>
+  </view>
+
+  <!-- 今日打卡按钮 -->
+  <view class="checkin-card">
+    <button 
+      class="checkin-btn {{isChecked ? 'checked' : ''}}" 
+      bindtap="doCheckin"
+    >
+      {{isTodayChecked ? '✅ 今日已打卡' : '⭐ 今日打卡'}}
+    </button>
+  </view>
+
+  <!-- 日历 -->
+  <view class="calendar-card">
+    <view class="calendar-header">
+      <button class="nav-btn" bindtap="prevMonth">&lt;</button>
+      <text class="current-month">{{currentYear}}年 {{currentMonth + 1}}月</text>
+      <button class="nav-btn" bindtap="nextMonth">&gt;</button>
+    </view>
+
+    <!-- 星期标题 -->
+    <view class="weekdays">
+      <text class="weekday">日</text>
+      <text class="weekday">一</text>
+      <text class="weekday">二</text>
+      <text class="weekday">三</text>
+      <text class="weekday">四</text>
+      <text class="weekday">五</text>
+      <text class="weekday">六</text>
+    </view>
+
+    <!-- 日历格子 -->
+    <view class="calendar-grid">
+      <view 
+        wx:for="{{calendarDays}}" 
+        wx:key="index"
+        class="calendar-day {{item.checked ? 'checked' : ''}} {{item.isOtherMonth ? 'other-month' : ''}}"
+      >
+        <text wx:if="{{item.date}}">{{item.date}}</text>
+        <text wx:if="{{item.checked}}">✅</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="tips">
+    💡 坚持每日记录梦境，提升觉知力，探索潜意识世界
+  </view>
+</view>

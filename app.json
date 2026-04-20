@@ -1,12 +1,42 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/community/community",
+    "pages/admin/admin",
+    "pages/comments/comments"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#6a11cb",
     "navigationBarTitleText": "巡游梦境",
     "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#6a11cb",
+    "borderStyle": "black",
+    "backgroundColor": "#F6F6F6",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "我的梦境",
+        "iconPath": "images/dream.png",
+        "selectedIconPath": "images/dream-active.png"
+      },
+      {
+        "pagePath": "pages/community/community",
+        "text": "社区",
+        "iconPath": "images/community.png",
+        "selectedIconPath": "images/community-active.png"
+      },
+      {
+        "pagePath": "pages/admin/admin",
+        "text": "个人中心",
+        "iconPath": "images/admin.png",
+        "selectedIconPath": "images/admin-active.png"
+      }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

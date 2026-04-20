@@ -1,0 +1,52 @@
+<view class="container">
+  <!-- 原梦境内容 -->
+  <view wx:if="{{dream}}" class="dream-card">
+    <view class="dream-header">
+      <text class="username">{{dream.username}}</text>
+      <text class="date">{{dream.formattedDate}}</text>
+    </view>
+    <view class="dream-content">{{dream.raw_content}}</view>
+  </view>
+
+  <!-- 评论列表 -->
+  <view class="comments-list">
+    <view wx:for="{{comments}}" wx:key="id" class="comment-card">
+      <view class="comment-header">
+        <text class="comment-user">{{item.username}}</text>
+        <text class="comment-date">{{item.formattedDate}}</text>
+        <text 
+          wx:if="{{item.user_id === currentUser.id}}" 
+          class="comment-delete"
+          bindtap="deleteComment"
+          data-id="{{item.id}}"
+        >
+          删除
+        </text>
+      </view>
+      <view class="comment-content">{{item.content}}</view>
+    </view>
+
+    <view wx:if="{{comments.length === 0}}" class="empty-state">
+      暂无评论，来抢沙发吧 🛋️
+    </view>
+  </view>
+
+  <!-- 发表评论 -->
+  <view wx:if="{{currentUser}}" class="comment-input-area">
+    <textarea 
+      class="comment-input"
+      placeholder="写下你的看法..."
+      value="{{newComment}}"
+      bindinput="handleInput"
+      auto-height
+      maxlength="500"
+    />
+    <button 
+      class="submit-btn" 
+      bindtap="submitComment"
+      disabled="{{!newComment.trim()}}"
+    >
+      发表评论
+    </button>
+  </view>
+</view>

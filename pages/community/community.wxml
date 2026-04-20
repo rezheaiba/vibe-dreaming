@@ -1,0 +1,48 @@
+<view class="container">
+  <!-- 顶部搜索与排序 -->
+  <view class="header-box">
+    <view class="search-box">
+      <input 
+        class="search-input" 
+        placeholder="搜一搜大家的梦境..." 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+      />
+      <button class="search-btn" bindtap="onSearch">搜索</button>
+    </view>
+    
+    <view class="sort-tabs">
+      <view class="tab {{sortBy === 'date' ? 'active' : ''}}" bindtap="changeSort" data-sort="date">最新</view>
+      <view class="tab {{sortBy === 'likes' ? 'active' : ''}}" bindtap="changeSort" data-sort="likes">最火</view>
+      <view class="tab {{sortBy === 'favorites' ? 'active' : ''}}" bindtap="changeSort" data-sort="favorites">精选</view>
+    </view>
+  </view>
+
+  <!-- 社区列表 -->
+  <scroll-view scroll-y class="post-list" bindscrolltolower="onReachBottom" refresher-enabled refresher-triggered="{{loading}}" bindrefresherrefresh="onPullDownRefresh">
+    <view wx:for="{{posts}}" wx:key="id" class="post-card" bindtap="goToDetail" data-id="{{item.id}}">
+      <view class="post-header">
+        <text class="post-user">{{item.username || '织梦人'}}</text>
+        <text class="post-date">{{item.formattedDate}}</text>
+      </view>
+      
+      <view class="post-content">{{item.raw_content}}</view>
+      
+      <view class="post-footer">
+        <view class="post-stat">
+          <text>❤️ {{item.like_count || 0}}</text>
+          <text>⭐ {{item.fav_count || 0}}</text>
+        </view>
+        <view class="ai-badges">
+          <text wx:if="{{item.refined_content}}" class="badge">精炼</text>
+          <text wx:if="{{item.analysis_content}}" class="badge">解梦</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{posts.length === 0 && !loading}}" class="empty-tip">
+      这里空空如也，快去分享你的第一个梦吧 ✨
+    </view>
+    <view wx:if="{{!hasMore && posts.length > 0}}" class="no-more">—— 已加载全部梦境 ——</view>
+  </scroll-view>
+</view>
