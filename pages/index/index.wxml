@@ -1,22 +1,30 @@
 <view class="container">
+  <!-- 未登录状态 -->
   <view wx:if="{{!currentUser}}">
     <view class="header">
       <text class="title">巡游梦境</text>
       <text class="subtitle">探索潜意识的奇妙世界</text>
     </view>
 
-    <view class="card section">
-      <view class="form-group">
-        <label>请输入您的昵称：</label>
+    <!-- 自动登录中 -->
+    <view wx:if="{{isLoginLoading}}" class="loading-state">
+      <view class="spinner"></view>
+      <text>正在连接梦境网络...</text>
+    </view>
+
+    <!-- 登录表单（自动登录失败或初始状态） -->
+    <view wx:else class="login-form">
+      <view class="input-group">
         <input 
           class="input" 
-          placeholder="例如：织梦人" 
-          value="{{username}}"
-          bindinput="handleInput"
+          placeholder="起一个织梦者的名字..." 
+          value="{{username}}" 
+          bindinput="handleInput" 
           data-field="username"
         />
       </view>
-      <button class="btn btn-primary" bindtap="login">开启梦境之旅</button>
+      <button class="btn btn-primary" bindtap="login">开启梦境旅程</button>
+      <view class="login-hint">提示：若已绑定微信，下次将自动登录</view>
     </view>
   </view>
 
@@ -32,6 +40,18 @@
           data-field="dreamInput"
           maxlength="-1"
           auto-height
+        />
+      </view>
+      <view class="ai-toggle-row">
+        <view class="ai-toggle-label">
+          <text class="ai-toggle-icon">🔮</text>
+          <text>自动使用 AI 解析</text>
+        </view>
+        <switch 
+          checked="{{autoAi}}" 
+          bindchange="toggleAutoAi" 
+          color="#6a11cb"
+          style="transform: scale(0.8);"
         />
       </view>
       <button class="btn btn-primary" bindtap="submitDream">✨ 记录梦境</button>

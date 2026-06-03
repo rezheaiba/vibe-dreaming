@@ -2,13 +2,56 @@ App({
   globalData: {
     currentUser: null,
     apiBase: 'http://127.0.0.1:8000',
-    needsReload: false // 全局刷新信号
+    needsReload: false, // 全局刷新信号
+    autoLoginStatus: 'pending' // pending, success, failed
   },
   onLaunch() {
     const user = wx.getStorageSync('currentUser');
     if (user) {
       this.globalData.currentUser = user;
+      this.globalData.autoLoginStatus = 'success';
+    } else {
+      this.globalData.autoLoginStatus = 'pending';
+      this.autoWeChatLogin();
     }
+  },
+
+  autoWeChatLogin() {
+    wx.login({
+      success: (res) => {
+        if (res.code) {
+          wx.request({
+            url: `${this.globalData.apiBase}/wechat_login`,
+            method: 'POST',
+            data: { code: res.code },
+            success: (loginRes) => {
+              if (loginRes.statusCode === 200) {
+                const user = loginRes.data;
+                this.globalData.currentUser = user;
+                this.globalData.autoLoginStatus = 'success';
+                wx.setStorageSync('currentUser', user);
+                if (this.userInfoReadyCallback) {
+                  this.userInfoReadyCallback(user);
+                }
+              } else {
+                console.error('WeChat Login Failed:', loginRes.data);
+                this.globalData.autoLoginStatus = 'failed';
+                if (this.loginFailedCallback) this.loginFailedCallback();
+              }
+            },
+            fail: (err) => {
+              console.error('Network Error:', err);
+              this.globalData.autoLoginStatus = 'failed';
+              if (this.loginFailedCallback) this.loginFailedCallback();
+            }
+          });
+        }
+      },
+      fail: () => {
+        this.globalData.autoLoginStatus = 'failed';
+        if (this.loginFailedCallback) this.loginFailedCallback();
+      }
+    });
   },
 
   checkLogin() {
@@ -41,6 +84,7 @@ App({
 
   logout() {
     this.globalData.currentUser = null;
+    this.globalData.autoLoginStatus = 'failed';
     wx.removeStorageSync('currentUser');
     wx.showLoading({ title: '退出中...' });
     setTimeout(() => {

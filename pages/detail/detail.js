@@ -13,7 +13,12 @@ Page({
     replyToId: null,
     replyToRoot: null,
     replyToUser: '',
-    inputFocus: false
+    inputFocus: false,
+    aiLoading: {
+      refined: false,
+      expanded: false,
+      analysis: false
+    }
   },
 
   onLoad(options) {
@@ -32,10 +37,47 @@ Page({
     this.setData({ loading: false })
   },
 
+  triggerSingleAi(e) {
+    const { type } = e.currentTarget.dataset
+    if (!this.dreamId || !this.data.currentUser || !this.data.isOwner) return
+    
+    this.setData({
+      [`aiLoading.${type}`]: true
+    })
+    
+    app.request({
+      url: `${app.globalData.apiBase}/dreams/${this.dreamId}/ai/${type}?user_id=${this.data.currentUser.id}`,
+      method: 'POST',
+      success: (res) => {
+        if (res.statusCode === 200) {
+          wx.showToast({ title: 'AI 生成成功', icon: 'success' })
+          const dream = res.data
+          dream.formattedDate = new Date(dream.record_date).toLocaleString()
+          this.setData({ dream })
+          app.globalData.needsReload = true
+        } else {
+          wx.showToast({ title: 'AI 生成失败', icon: 'none' })
+        }
+      },
+      fail: () => {
+        wx.showToast({ title: '网络连接异常', icon: 'none' })
+      },
+      complete: () => {
+        this.setData({
+          [`aiLoading.${type}`]: false
+        })
+      }
+    })
+  },
+
   fetchDreamDetail(userId) {
     return new Promise((resolve) => {
+      let url = `${app.globalData.apiBase}/dreams/detail/${this.dreamId}`
+      if (userId) {
+        url += `?user_id=${userId}`
+      }
       app.request({
-        url: `${app.globalData.apiBase}/dreams/detail/${this.dreamId}?user_id=${userId}`,
+        url,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200) {
@@ -52,8 +94,12 @@ Page({
 
   fetchComments(userId) {
     return new Promise((resolve) => {
+      let url = `${app.globalData.apiBase}/comments/${this.dreamId}`
+      if (userId) {
+        url += `?user_id=${userId}`
+      }
       app.request({
-        url: `${app.globalData.apiBase}/comments/${this.dreamId}?user_id=${userId}`,
+        url,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200) {

@@ -206,3 +206,62 @@
 }
 .ci-field { flex: 1; font-size: 26rpx; }
 .ci-send { color: #6a11cb; font-weight: bold; font-size: 26rpx; margin-left: 20rpx; }
+
+/* AI 逐个生成交互样式 */
+.ai-item.clickable {
+  transition: all 0.2s ease;
+  border-top: 2rpx dashed rgba(0,0,0,0.08);
+  border-right: 2rpx dashed rgba(0,0,0,0.08);
+  border-bottom: 2rpx dashed rgba(0,0,0,0.08);
+}
+
+.ai-item.clickable:active {
+  opacity: 0.85;
+  transform: scale(0.99);
+}
+
+.ai-placeholder {
+  font-size: 26rpx;
+  color: #6a11cb;
+  padding: 10rpx 0;
+  font-weight: 500;
+}
+
+.ai-placeholder.readonly {
+  font-style: italic;
+  color: #ccc;
+}
+
+.ai-item.expand .ai-placeholder {
+  color: #9b59b6;
+}
+
+.ai-item.analyze .ai-placeholder {
+  color: #ff9f43;
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  font-size: 26rpx;
+  color: #666;
+  padding: 10rpx 0;
+}
+
+.ai-spinner {
+  width: 28rpx;
+  height: 28rpx;
+  border: 4rpx solid rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  animation: ai-spin 1s linear infinite;
+}
+
+.ai-item.refine .ai-spinner { border-top-color: #6a11cb; }
+.ai-item.expand .ai-spinner { border-top-color: #9b59b6; }
+.ai-item.analyze .ai-spinner { border-top-color: #ff9f43; }
+
+@keyframes ai-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

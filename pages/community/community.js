@@ -53,8 +53,10 @@ Page({
     this.setData({ loading: true })
 
     const { page, searchKeyword, sortBy } = this.data
-    const userId = app.globalData.currentUser ? app.globalData.currentUser.id : ''
-    let url = `${app.globalData.apiBase}/community?page=${page}&limit=10&sort_by=${sortBy}&user_id=${userId}`
+    let url = `${app.globalData.apiBase}/community?page=${page}&limit=10&sort_by=${sortBy}`
+    if (app.globalData.currentUser && app.globalData.currentUser.id) {
+      url += `&user_id=${app.globalData.currentUser.id}`
+    }
     if (searchKeyword) {
       url += `&keyword=${encodeURIComponent(searchKeyword)}`
     }
@@ -84,6 +86,7 @@ Page({
   },
 
   goToDetail(e) {
+    if (!app.checkLogin()) return
     const { id } = e.currentTarget.dataset
     wx.navigateTo({
       url: `/pages/detail/detail?id=${id}`

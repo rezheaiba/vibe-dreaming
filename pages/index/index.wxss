@@ -181,3 +181,65 @@ label {
   padding: 80rpx 0;
   font-size: 28rpx;
 }
+
+/* 新增：登录与加载状态样式 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+  color: #fff;
+}
+
+.spinner {
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border-top: 4rpx solid #fff;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.login-form {
+  padding: 40rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20rpx;
+  margin: 0 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.1);
+}
+
+.login-hint {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+  margin-top: 20rpx;
+}
+
+.ai-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25rpx;
+  padding: 10rpx 0;
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 20rpx;
+}
+
+.ai-toggle-label {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: #555;
+}
+
+.ai-toggle-icon {
+  margin-right: 10rpx;
+  font-size: 32rpx;
+}

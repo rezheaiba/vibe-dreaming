@@ -26,19 +26,42 @@
         </block>
       </view>
 
-      <!-- AI 板块 (补全扩充功能) -->
+      <!-- AI 板块 -->
       <view class="ai-container" wx:if="{{!isEdit}}">
-        <view class="ai-item refine" wx:if="{{dream.refined_content}}">
+        <!-- AI 精炼 -->
+        <view class="ai-item refine {{isOwner && !dream.refined_content && !aiLoading.refined ? 'clickable' : ''}}" bindtap="{{isOwner && !dream.refined_content && !aiLoading.refined ? 'triggerSingleAi' : ''}}" data-type="refined">
           <view class="ai-label">✨ AI 精炼</view>
-          <view class="ai-text">{{dream.refined_content}}</view>
+          <view class="ai-text" wx:if="{{dream.refined_content}}">{{dream.refined_content}}</view>
+          <view class="ai-loading" wx:elif="{{aiLoading.refined}}">
+            <view class="ai-spinner"></view>
+            <text>AI 正在凝练梦境...</text>
+          </view>
+          <view class="ai-placeholder" wx:elif="{{isOwner}}">点击生成 AI 精炼 ✨</view>
+          <view class="ai-placeholder readonly" wx:else>暂无 AI 精炼</view>
         </view>
-        <view class="ai-item expand" wx:if="{{dream.expanded_content}}">
+
+        <!-- AI 扩充 -->
+        <view class="ai-item expand {{isOwner && !dream.expanded_content && !aiLoading.expanded ? 'clickable' : ''}}" bindtap="{{isOwner && !dream.expanded_content && !aiLoading.expanded ? 'triggerSingleAi' : ''}}" data-type="expanded">
           <view class="ai-label">🌌 AI 扩充</view>
-          <view class="ai-text">{{dream.expanded_content}}</view>
+          <view class="ai-text" wx:if="{{dream.expanded_content}}">{{dream.expanded_content}}</view>
+          <view class="ai-loading" wx:elif="{{aiLoading.expanded}}">
+            <view class="ai-spinner"></view>
+            <text>AI 正在编织细节...</text>
+          </view>
+          <view class="ai-placeholder" wx:elif="{{isOwner}}">点击生成 AI 扩充 🌌</view>
+          <view class="ai-placeholder readonly" wx:else>暂无 AI 扩充</view>
         </view>
-        <view class="ai-item analyze" wx:if="{{dream.analysis_content}}">
+
+        <!-- AI 解梦 -->
+        <view class="ai-item analyze {{isOwner && !dream.analysis_content && !aiLoading.analysis ? 'clickable' : ''}}" bindtap="{{isOwner && !dream.analysis_content && !aiLoading.analysis ? 'triggerSingleAi' : ''}}" data-type="analysis">
           <view class="ai-label">🔮 AI 解梦</view>
-          <view class="ai-text">{{dream.analysis_content}}</view>
+          <view class="ai-text" wx:if="{{dream.analysis_content}}">{{dream.analysis_content}}</view>
+          <view class="ai-loading" wx:elif="{{aiLoading.analysis}}">
+            <view class="ai-spinner"></view>
+            <text>AI 正在窥探潜意识...</text>
+          </view>
+          <view class="ai-placeholder" wx:elif="{{isOwner}}">点击生成 AI 解梦 🔮</view>
+          <view class="ai-placeholder readonly" wx:else>暂无 AI 解梦</view>
         </view>
       </view>
     </view>

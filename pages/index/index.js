@@ -7,12 +7,31 @@ Page({
     dreamInput: '',
     searchKeyword: '',
     dreams: [],
-    filteredDreams: []
+    filteredDreams: [],
+    isLoginLoading: true, // 新增：标记是否正在尝试自动登录
+    autoAi: true
   },
 
   onLoad() {
-    this.setData({ currentUser: app.globalData.currentUser })
-    if (this.data.currentUser) this.loadDreams()
+    const status = app.globalData.autoLoginStatus
+    if (app.globalData.currentUser) {
+      this.setData({ currentUser: app.globalData.currentUser, isLoginLoading: false })
+      this.loadDreams()
+    } else if (status === 'failed') {
+      this.setData({ isLoginLoading: false })
+    } else {
+      this.setData({ isLoginLoading: true })
+      // 尝试自动登录
+      app.userInfoReadyCallback = user => {
+        this.setData({ currentUser: user, isLoginLoading: false })
+        this.loadDreams()
+      }
+      // 如果自动登录失败（如网络问题或后端未配置），则显示手动登录
+      app.loginFailedCallback = () => {
+        this.setData({ isLoginLoading: false })
+        wx.showToast({ title: '自动登录失败，请手动尝试', icon: 'none' })
+      }
+    }
   },
 
   onShow() {
@@ -48,6 +67,7 @@ Page({
         if (res.statusCode === 200) {
           const user = res.data
           app.globalData.currentUser = user
+          app.globalData.autoLoginStatus = 'success'
           wx.setStorageSync('currentUser', user)
           this.setData({ currentUser: user })
           this.loadDreams()
@@ -56,18 +76,24 @@ Page({
     })
   },
 
+  toggleAutoAi(e) {
+    this.setData({ autoAi: e.detail.value })
+  },
+
   submitDream() {
     if (!this.data.dreamInput) {
       wx.showToast({ title: '请输入梦境内容', icon: 'none' }); return
     }
-    wx.showLoading({ title: 'AI处理中...' }) // 给予明确反馈
+    const loadingTitle = this.data.autoAi ? 'AI处理中...' : '正在记梦...'
+    wx.showLoading({ title: loadingTitle })
     app.request({
       url: `${app.globalData.apiBase}/dreams`,
       method: 'POST',
-      data: {
-        user_id: this.data.currentUser.id,
-        content: this.data.dreamInput,
-        is_public: 0
+      data: { 
+        user_id: this.data.currentUser.id, 
+        content: this.data.dreamInput, 
+        is_public: 0,
+        auto_ai: this.data.autoAi
       },
       success: (res) => {
         if (res.statusCode === 200) {
