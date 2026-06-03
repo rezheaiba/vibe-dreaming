@@ -10,6 +10,7 @@ from typing import List, Optional
 import os
 import json
 import urllib.request
+from openai import OpenAI
 
 load_dotenv()
 
@@ -143,10 +144,21 @@ def get_db():
     try: yield db
     finally: db.close()
 
-# --- Combined AI Logic (DeepSeek Anthropic API Compatibility) ---
-ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL", "https://api.deepseek.com/anthropic")
-ANTHROPIC_AUTH_TOKEN = os.getenv("ANTHROPIC_AUTH_TOKEN")
-AI_ENABLED = ANTHROPIC_AUTH_TOKEN is not None and ANTHROPIC_AUTH_TOKEN != ""
+# --- Combined AI Logic (DeepSeek OpenAI API Compatibility) ---
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_OPENAI_URL")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+AI_ENABLED = DEEPSEEK_API_KEY is not None and DEEPSEEK_API_KEY != ""
+AI_MODEL_NAME = os.getenv("AI_MODEL_NAME", "deepseek-v4-flash")
+
+if AI_ENABLED:
+    base_url = DEEPSEEK_BASE_URL.rstrip('/')
+    if not base_url.endswith("/v1"):
+        openai_base_url = f"{base_url}/v1"
+    else:
+        openai_base_url = base_url
+    client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=openai_base_url)
+else:
+    client = None
 
 def get_ai_length_constraints(raw_content: str) -> tuple:
     # 返回 (expanded_constraint, analysis_constraint)
@@ -162,13 +174,75 @@ def get_ai_length_constraints(raw_content: str) -> tuple:
         analysis = "解梦分析的字数控制在 200-300 字左右，深度剖析并给出明确的现实建议"
     return expanded, analysis
 
+def clean_extracted_value(val: str) -> str:
+    val = val.strip()
+    if val.endswith(','):
+        val = val[:-1].strip()
+    if val.startswith('"') or val.startswith("'"):
+        val = val[1:]
+    if val.endswith('"') or val.endswith("'"):
+        val = val[:-1]
+    val = val.strip()
+    if val.endswith('}') or val.endswith(']'):
+        val = val[:-1].strip()
+        if val.endswith('"') or val.endswith("'"):
+            val = val[:-1].strip()
+    val = val.replace('\\"', '"').replace('\\n', '\n').replace('\\t', '\t')
+    return val
+
+def format_to_string(val) -> str:
+    if val is None:
+        return None
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        return "\n\n".join(f"{k}：{v}" for k, v in val.items())
+    if isinstance(val, list):
+        return "\n\n".join(str(item) for item in val)
+    return str(val)
+
+def parse_lax_json(raw_text: str) -> dict:
+    import re
+    raw_text = raw_text.strip()
+    if raw_text.startswith("```json"):
+        raw_text = raw_text[7:]
+    elif raw_text.startswith("```"):
+        raw_text = raw_text[3:]
+    if raw_text.endswith("```"):
+        raw_text = raw_text[:-3]
+    raw_text = raw_text.strip()
+
+    # 尝试常规解析
+    try:
+        cleaned = re.sub(r'\\"(?=\s*[}\],])', '"', raw_text)
+        if cleaned.startswith('{') and cleaned.endswith(']'):
+            cleaned = cleaned[:-1] + '}'
+        parsed = json.loads(cleaned, strict=False)
+        return {k: format_to_string(v) for k, v in parsed.items()}
+    except Exception as e:
+        print(f"标准 JSON 解析失败，将使用正则匹配提取字段: {e}")
+
+    result = {"refined": None, "expanded": None, "analysis": None}
+    idx_refined = re.search(r'["\']?refined["\']?\s*:', raw_text)
+    idx_expanded = re.search(r'["\']?expanded["\']?\s*:', raw_text)
+    idx_analysis = re.search(r'["\']?analysis["\']?\s*:', raw_text)
+
+    if idx_refined and idx_expanded:
+        result["refined"] = clean_extracted_value(raw_text[idx_refined.end():idx_expanded.start()])
+    if idx_expanded and idx_analysis:
+        result["expanded"] = clean_extracted_value(raw_text[idx_expanded.end():idx_analysis.start()])
+    if idx_analysis:
+        result["analysis"] = clean_extracted_value(raw_text[idx_analysis.end():])
+
+    return result
+
 def process_ai_all(text: str) -> dict:
     default_res = {
         "refined": None,
         "expanded": None,
         "analysis": None
     }
-    if not AI_ENABLED: 
+    if not AI_ENABLED or not client: 
         return default_res
     
     expanded_constraint, analysis_constraint = get_ai_length_constraints(text)
@@ -176,102 +250,61 @@ def process_ai_all(text: str) -> dict:
     prompt = f"""你是一个专业的梦境解析和内容生成助手。请对以下梦境内容进行深度处理，并返回一个符合以下要求的 JSON 字符串。
 
 请直接返回一个符合 JSON 格式的字符串，不要包含任何 Markdown 代码块标记（如 ```json 或 ```），也不要有任何前导或后继的解释性文字。JSON 结构必须严格包含以下三个字段：
-1. "refined": 对梦境内容的精炼整理。去除口语化和冗余词汇，梳理出清晰的梦境主线故事，语言凝练流畅（字数在 100 字以内，或者为原梦境的 50% 长度）。
-2. "expanded": 梦境的奇幻细节扩充。展开脑洞，拒绝文艺矫情，要写得新奇有趣、脑洞大开、充满魔幻现实主义或幽默荒诞的色彩，补充有趣的感官描写（如画面、声音、氛围等），将其扩展成一段有趣的梦境短故事。要求：{expanded_constraint}。
-3. "analysis": 专业的心理学解梦分析。写得非常专业、学术派，巧妙运用弗洛伊德精神分析、荣格原型理论、脑科学或一些高深词汇（如“防御机制”、“阿尼玛投射”、“集体无意识”、“边缘系统过度激活”、“镜像阶段”等），听起来非常权威、深奥且能够彻底“折服/忽悠”住普通人，并给出一句温和的现实建议。要求：{analysis_constraint}。
+1. "refined": 对梦境内容的精炼整理。去除口语化和冗余词汇，梳理出清晰的梦境主线故事，语言凝练流畅（字数在 100 字以内）。
+2. "expanded": 梦境的奇幻细节扩充。要求：直接开始讲故事，不要写“这是一个梦”“故事如下”这类开头；用第一人称或第三人称均可，但要有强烈的代入感，像在讲自己亲身经历的事；保留原梦境的核心元素，但可以合理脑补、夸张、反转，让情节变得更有趣、荒诞或出人意料；不要有过多的换行，保持连贯，不要分段；{expanded_constraint}。
+3. "analysis": 东西方智慧结合的深度解梦。包含四个维度：
+   - 心理学解析：结合弗洛伊德/荣格理论与认知科学，融入专业术语剖析梦境隐喻。
+   - 东方解梦：引用《周公解梦》意象进行东西方视角呼应或对比。
+   - 七日运势：推演未来 7 天的事业、财运、感情、健康运势（适当使用玄学术语）。
+   - 现实建议：给出一个温和、具体的落地生活建议。
+   要求：{analysis_constraint}。
 
 梦境内容：{text}"""
     
-    url = f"{ANTHROPIC_BASE_URL.rstrip('/')}/v1/messages"
-    headers = {
-        "x-api-key": ANTHROPIC_AUTH_TOKEN,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
-    payload = {
-        "model": "deepseek-v4-flash",
-        "max_tokens": 4096,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    }
-    
     try:
-        import ssl
-        context = ssl._create_unverified_context()
-        req = urllib.request.Request(
-            url, 
-            data=json.dumps(payload).encode("utf-8"), 
-            headers=headers,
-            method="POST"
+        response = client.chat.completions.create(
+            model=AI_MODEL_NAME,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=4096,
+            reasoning_effort="high",
+            extra_body={"thinking": {"type": "enabled"}}
         )
-        with urllib.request.urlopen(req, context=context, timeout=60) as response:
-            res_data = json.loads(response.read().decode("utf-8"))
-            
-        content_list = res_data.get("content", [])
-        raw_text = None
-        for item in content_list:
-            if item.get("type") == "text":
-                raw_text = item.get("text", "").strip()
-                break
+        raw_text = response.choices[0].message.content.strip() if response.choices else None
                 
         if raw_text:
-            # 清理可能存在的 markdown 代码块包裹
-            if raw_text.startswith("```json"):
-                raw_text = raw_text[7:]
-            elif raw_text.startswith("```"):
-                raw_text = raw_text[3:]
-            if raw_text.endswith("```"):
-                raw_text = raw_text[:-3]
-            raw_text = raw_text.strip()
-            
-            parsed = json.loads(raw_text)
+            parsed = parse_lax_json(raw_text)
             return {
                 "refined": parsed.get("refined", default_res["refined"]),
                 "expanded": parsed.get("expanded", default_res["expanded"]),
                 "analysis": parsed.get("analysis", default_res["analysis"])
             }
     except Exception as e:
-        print(f"Error calling DeepSeek Anthropic API: {e}")
+        print(f"Error calling DeepSeek OpenAI API: {e}")
         return default_res
     return default_res
 
 def call_deepseek_single(prompt: str) -> str:
-    if not AI_ENABLED:
+    if not AI_ENABLED or not client:
         return "AI 功能目前未开启，请先配置 API Key"
     
-    url = f"{ANTHROPIC_BASE_URL.rstrip('/')}/v1/messages"
-    headers = {
-        "x-api-key": ANTHROPIC_AUTH_TOKEN,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
-    payload = {
-        "model": "deepseek-v4-flash",
-        "max_tokens": 2048,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    }
     try:
-        import ssl
-        context = ssl._create_unverified_context()
-        req = urllib.request.Request(
-            url, 
-            data=json.dumps(payload).encode("utf-8"), 
-            headers=headers,
-            method="POST"
+        response = client.chat.completions.create(
+            model=AI_MODEL_NAME,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=2048,
+            reasoning_effort="high",
+            extra_body={"thinking": {"type": "enabled"}}
         )
-        with urllib.request.urlopen(req, context=context, timeout=60) as response:
-            res_data = json.loads(response.read().decode("utf-8"))
-            
-        content_list = res_data.get("content", [])
-        for item in content_list:
-            if item.get("type") == "text":
-                return item.get("text", "").strip()
+        if response.choices:
+            return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Error calling DeepSeek API for single feature: {e}")
     return "生成失败，请稍后重试。"
+
 
 def clean_placeholder(val):
     if not val: return None
@@ -523,7 +556,7 @@ def run_individual_ai(dream_id: int, feature_type: str, user_id: int, db: Sessio
         
     if feature_type == "refined":
         prompt = f"""你是一个专业的梦境精炼助手。请将以下梦境内容进行精炼整理。
-去除口语化和冗余词汇，梳理出清晰的梦境主线故事，语言凝练流畅（字数在 100 字以内）。
+去除口语化和冗余词汇，梳理出清晰的梦境主线故事，语言凝练流畅（字数在100 字以内）。
 请直接返回精炼后的梦境描述文本，不要有任何解释性文字或 Markdown 标签，不要用“这是一段...”开头。
 
 梦境内容：{d.raw_content}"""
@@ -531,20 +564,30 @@ def run_individual_ai(dream_id: int, feature_type: str, user_id: int, db: Sessio
         d.refined_content = res
     elif feature_type == "expanded":
         expanded_constraint, _ = get_ai_length_constraints(d.raw_content)
-        prompt = f"""你是一个脑洞大开的梦境细节扩充助手。请根据以下梦境内容进行奇幻细节扩充。
-发挥想象力，拒绝文艺矫情，要写得新奇有趣、脑洞大开、充满魔幻现实主义或幽默荒诞的色彩，补充有趣的感官描写（如画面、声音、氛围等），将其扩展成一段具有沉浸感、奇妙有趣的梦境故事。
-要求：{expanded_constraint}。
-请直接返回扩充后的故事文本，不要有任何解释性文字或 Markdown 标签，不要用“这是一段...”开头。
+        prompt = f"""你是一个会讲故事的内容扩充助手。请梳理以下梦境内容，并扩充成一段有意思的梦境故事。
+
+要求：
+1. 直接开始讲故事，不要写“这是一个梦”“故事如下”这类开头。
+2. 用第一人称或第三人称均可，但要有强烈的代入感，像在讲自己亲身经历的事。
+3. 保留原梦境的核心元素，但可以合理脑补、夸张、反转，让情节变得更有趣、荒诞或出人意料。
+4. 不要有过多的换行，保持连贯，不要分段。
+5. {expanded_constraint}
 
 梦境内容：{d.raw_content}"""
         res = call_deepseek_single(prompt)
         d.expanded_content = res
     elif feature_type == "analysis":
         _, analysis_constraint = get_ai_length_constraints(d.raw_content)
-        prompt = f"""你是一个殿堂级的资深心理学解梦大师。请对以下梦境内容进行解梦分析。
-写得必须非常专业、学术派，巧妙运用弗洛伊德精神分析、荣格原型理论、认知神经学甚至一些高深词汇（如“防御机制”、“集体无意识”、“镜像阶段”、“阿尼玛投射”、“边缘系统过度激活”等），听起来非常权威、深奥且能够折服和“忽悠”住普通人，并给出一句切实、温和的现实建议。
-要求：{analysis_constraint}。
-请直接返回解梦分析文本，不要有任何解释性文字或 Markdown 标签，不要用“这是一段...”开头。
+        prompt = f"""你是一位兼具西方心理学与东方玄学智慧的解梦专家。请对以下梦境进行深度解析：
+
+1. 心理学解析：结合弗洛伊德/荣格理论与认知神经科学，巧妙融入专业术语（如“防御机制”、“集体无意识”、“镜像阶段”、“边缘系统过度激活”等）剖析梦境隐喻。
+2. 东方解梦：引用《周公解梦》对应意象，与西方心理学视角进行呼应或对比。
+3. 七日运势：推演未来 7 天的事业、财运、感情、健康运势，适当使用玄学术语（如“气运流转”、“桃花入命”、“印星护体”等）。
+4. 现实建议：给出一个温和、具体的落地生活建议。
+
+要求：
+1. 直接输出解析内容，不要有任何前导词（如“这是一段分析...”）或 Markdown 代码块包裹。
+2. {analysis_constraint}
 
 梦境内容：{d.raw_content}"""
         res = call_deepseek_single(prompt)
